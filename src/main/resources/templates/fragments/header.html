@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+  <head>
+    
+  </head>
+  <body>
+    <div th:fragment="header">
+        <h1 id="logo">Book Shop</h1>
+        <nav class="header">
+        <ul>
+            <li><a href="/v1/web/home">Books</a></li>
+
+            <li sec:authorize="hasRole('ADMIN')"><a href="/v1/web/books/">Manage Books</a></li>
+            <li sec:authorize="hasRole('CUSTOMER')"><a href="/v1/web/customers/checkout">Cart</a></li>
+
+            <!-- Show login/register links only when not authenticated -->
+            <li sec:authorize="!isAuthenticated()"><a href="/v1/web/users/login">Login</a></li>
+            <li sec:authorize="!isAuthenticated()"><a href="/v1/web/users/register">Register</a></li>
+            
+            <!-- Show logout link only when authenticated -->
+            <li sec:authorize="isAuthenticated()"><a href="/v1/web/users/logout">Logout</a></li>
+        </ul>
+        </nav>
+    </div>
+  </body>
+</html>
+
+

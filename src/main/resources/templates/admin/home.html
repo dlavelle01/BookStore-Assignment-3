@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--/* Head takes 3 arguments that are fragments */-->
+<head>
+    
+   
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+   
+         <script type="text/javascript"> 
+         document.addEventListener('DOMContentLoaded', function() {
+             flatpickr("#year", { 
+                 dateFormat: "Y-m-d",
+                 allowInput: true
+             }); 
+             
+             flatpickr("#year-standalone", { 
+                 dateFormat: "Y-m-d",
+                 allowInput: true
+             }); 
+             
+             // workaround to show the edit overlay if there are still validation errors. Use mode
+             var editOverlay = document.querySelector('.edit-overlay');
+             var isEditMode = editOverlay && editOverlay.style.display === 'flex';
+             var hasValidationErrors = document.querySelector('.error-message') !== null;
+             
+             // Show modal if we're in edit mode or have validation errors
+             if (editOverlay && (isEditMode || hasValidationErrors)) {
+                 editOverlay.style.display = 'flex';
+             }
+         });
+         
+         function hideEditForm() {
+             document.querySelector('.edit-book-container').style.display = 'none';
+             document.querySelector('.edit-overlay').style.display = 'none';
+             document.querySelector('.books-content').style.display = 'flex';
+         }
+     </script>
+    
+</head>
+<body>
+    <!--/* Header fragment */-->
+    <nav class="navbar navbar-inverse navbar-fixed-top" th:replace="fragments/header :: header">
+       
+    </nav>
+
+    <!--/* The value passed from calling template will be inserted in this element */-->
+    <div class="container" th:fragment="content(value)" >
+        <!-- Include the books content fragment from admin/books.html -->
+        <div th:insert="admin/books :: books-content"></div>
+        
+        <!-- Include the edit book form fragment (hidden by default) -->
+        <div th:if="${book != null}" th:style="${editMode} ? 'display: flex;' : 'display: none;'" class="edit-overlay">
+            <div th:insert="admin/editBook :: edit-book-form"></div>
+        </div>
+    </div>
+    
+    <!-- Add some basic styling for the edit overlay -->
+    <style>
+        .edit-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            align-content: center;
+            flex-flow:row-reverse;
+        }
+        
+       
+        
+        .close-edit {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-edit:hover {
+            color: #333;
+        }
+        
+        
+        
+    </style>
+    <!--
+    <nav class="navbar navbar-inverse navbar-fixed-top"  th:replace="fragments/footer :: footer"></nav>
+    -->
+</body>
+</html>

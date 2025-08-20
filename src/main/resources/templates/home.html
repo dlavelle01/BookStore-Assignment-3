@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    
+   
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+   
+         <script type="text/javascript"> 
+         document.addEventListener('DOMContentLoaded', function() {
+             flatpickr("#year", { 
+                 dateFormat: "Y-m-d",
+                 allowInput: true
+             }); 
+             
+             flatpickr("#year-standalone", { 
+                 dateFormat: "Y-m-d",
+                 allowInput: true
+             }); 
+             
+             // workaround to show the edit overlay if there are still validation errors. Use mode
+             var editOverlay = document.querySelector('.edit-overlay');
+             var isEditMode = editOverlay && editOverlay.style.display === 'flex';
+             var hasValidationErrors = document.querySelector('.error-message') !== null;
+             
+             // Show modal if we're in edit mode or have validation errors
+             if (editOverlay && (isEditMode || hasValidationErrors)) {
+                 editOverlay.style.display = 'flex';
+             }
+         });
+         
+         function hideEditForm() {
+             document.querySelector('.edit-book-container').style.display = 'none';
+             document.querySelector('.edit-overlay').style.display = 'none';
+             document.querySelector('.books-content').style.display = 'flex';
+         }
+     </script>
+    
+</head>
+<body>
+    <!--/* Header fragment */-->
+    <nav class="navbar navbar-inverse navbar-fixed-top" th:replace="fragments/header :: header">
+       
+    </nav>
+
+    <!--/* The value passed from calling template will be inserted in this element */-->
+    <div class="container" th:fragment="content(value)" >
+        <!-- Include the books content fragment from index.html -->
+        <div th:insert="index :: books-content"></div>
+        
+        
+    </div>
+    
+    
+    <!--
+    <nav class="navbar navbar-inverse navbar-fixed-top"  th:replace="fragments/footer :: footer"></nav>
+    -->
+</body>
+</html>

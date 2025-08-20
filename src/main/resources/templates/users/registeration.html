@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Books Store Application</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body>
+<!--/* Header fragment */-->
+<nav class="navbar navbar-inverse navbar-fixed-top" th:replace="fragments/header :: header">
+       
+</nav>
+
+<div class="books-content" style="font-size: 1.1em;">
+    <div th:insert="fragments/breadcrumb :: breadcrumb('User Registration')"></div>
+</div>
+
+
+<div class="edit-form-header center">
+    
+    <form th:action="@{/v1/web/users/register}" method="post" th:object="${userRegistrationRequest}" class="edit-form-header form">
+        <input type="hidden" name="_method" value="post"/>
+
+        <div th:if="${registrationError}" class="error-message" style="color: red; margin-bottom: 15px; padding: 10px; border: 1px solid red; background-color: #ffe6e6; border-radius: 4px;">
+            <span th:text="${registrationError}"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="userName">Username:</label>
+            <input type="text" id="userName"
+                   th:field="*{userName}"
+                   th:classappend="${#fields.hasErrors('userName')} ? 'is-invalid' : ''" />
+            <span th:if="${#fields.hasErrors('userName')}"
+                  th:errors="*{userName}" class="error-message">Invalid</span>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password"
+                   th:field="*{password}"
+                   th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''" />
+            <span th:if="${#fields.hasErrors('password')}"
+                  th:errors="*{password}" class="error-message">Invalid</span>
+        </div>
+
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name"
+                   th:field="*{name}"
+                   th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''" />
+            <span th:if="${#fields.hasErrors('name')}"
+                  th:errors="*{name}" class="error-message">Invalid</span>
+        </div>
+
+        <div class="form-group">
+            <label for="surname">Surname:</label>
+            <input type="text" id="surname"
+                   th:field="*{surname}"
+                   th:classappend="${#fields.hasErrors('surname')} ? 'is-invalid' : ''" />
+            <span th:if="${#fields.hasErrors('surname')}"
+                  th:errors="*{surname}" class="error-message">Invalid</span>
+        </div>
+
+        <div class="form-group">
+            <label for="dateOfBirth">Date of Birth:</label>
+            <input type="text" id="dateOfBirth"
+                   th:field="*{dateOfBirth}"
+                   th:classappend="${#fields.hasErrors('dateOfBirth')} ? 'is-invalid' : ''" />
+            <span th:if="${#fields.hasErrors('dateOfBirth')}"
+                  th:errors="*{dateOfBirth}" class="error-message">Invalid</span>
+        </div>
+
+        <div class="form-group">
+            <label for="address">Address:</label>
+            <textarea id="address"
+                      th:field="*{address}"
+                      th:classappend="${#fields.hasErrors('address')} ? 'is-invalid' : ''"
+                      rows="3" cols="50"></textarea>
+            <span th:if="${#fields.hasErrors('address')}"
+                  th:errors="*{address}" class="error-message">Invalid</span>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email"
+                   th:field="*{email}"
+                   th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''" />
+            <span th:if="${#fields.hasErrors('email')}"
+                  th:errors="*{email}" class="error-message">Invalid</span>
+        </div>
+
+        <div class="form-group">
+            <label for="phoneNumber">Phone Number:</label>
+            <input type="tel" id="phoneNumber"
+                   th:field="*{phoneNumber}"
+                   th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid' : ''" />
+            <span th:if="${#fields.hasErrors('phoneNumber')}"
+                  th:errors="*{phoneNumber}" class="error-message">Invalid</span>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">Register</button>
+            <button type="reset">Reset</button>
+        </div>
+    </form>
+</div>
+
+<script> 
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr("#dateOfBirth", { 
+            dateFormat: "Y-m-d",
+            allowInput: true,
+            maxDate: "today"
+        }); 
+    });
+</script>
+
+
+
+</body>
+</html>

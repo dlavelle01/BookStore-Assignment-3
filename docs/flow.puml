@@ -1,0 +1,31 @@
+@startuml
+
+!option handwritten true
+left to right direction
+
+skinparam rectangle<<behavior>> {
+	roundCorner 25
+}
+
+sprite $bProcess jar:archimate/business-process
+sprite $aService jar:archimate/application-service
+
+rectangle "Search" as Browse <<$bProcess>><<behavior>> #Business
+rectangle "Login" as Login <<$bProcess>><<behavior>> #Business
+rectangle "Add" as Add <<$bProcess>><<behavior>> #Business
+rectangle "Checkout" as Checkout <<$bProcess>><<behavior>> #Business
+rectangle "Process" as Process <<$bProcess>><<behavior>> #Application
+rectangle "Register" as Register <<$bProcess>><<behavior>> #Application
+
+
+start -- Browse
+Browse -- Login 
+Login -- Add
+Add -- Checkout
+Checkout -- Process
+
+Login -- Register
+Register -right- Add
+
+
+@enduml

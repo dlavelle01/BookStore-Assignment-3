@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Books Store Application</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body>
+<!--/* Header fragment */-->
+<nav class="navbar navbar-inverse navbar-fixed-top" th:replace="fragments/header :: header">
+       
+</nav>
+
+<div class="books-content" style="font-size: 1.1em;">
+    <div th:insert="fragments/breadcrumb :: breadcrumb('Cart')"></div>
+</div>
+
+
+<div class="actions" style="gap: 20px;">
+    <form th:action="@{/v1/web/home}" method="get" >
+        <button type="submit">Browse Books</button>
+    </form>
+    <form th:action="@{/v1/web/customers/order}" method="get" >
+        <button type="submit">Place Order</button>
+    </form>
+</div>
+
+<div class="search-container">
+    
+    <table class="results" >
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Book</th>
+                            <th>Author</th>
+                            <th>ISBN</th>
+                            <th>Year</th>
+                            <th>Price</th>
+                            <th>Copies</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${cartItems}" th:classappend="${!item.bookAvailable} ? 'table-warning' : ''">
+                            <td>
+                                <strong th:text="${item.book.title}">Book Title</strong>
+                            </td>
+                            <td th:text="${item.book.author}">Author Name</td>
+                            <td th:text="${item.book.isbn}">ISBN</td>
+                            <td th:text="${item.book.year}">2023</td>
+                            <td>
+                                <span class="price" th:text="${'$' + item.book.price}">$19.99</span>
+                            </td>
+                            <td>
+                                <span th:text="${item.copies}" 
+                                      th:classappend="${item.copies <= 0} ? 'text-danger' : 'text-success'">
+                                    5 copies
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        th:onclick="'removeFromCart(' + ${item.book.id} + ')'">
+                                    Remove
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                
+            
+           
+    
+</div>
+
+<script>
+    function removeFromCart(bookId) {
+        if (confirm('Are you sure you want to remove this book from your cart?')) {
+            window.location.href = '/v1/web/customers/removeItemFromCart?bookId=' + bookId;
+        }
+    }
+    
+    function proceedToCheckout() {
+        // Implement checkout
+        alert('Checkout');
+    }
+</script>
+
+</body>
+</html>

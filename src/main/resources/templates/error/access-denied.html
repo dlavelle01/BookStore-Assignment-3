@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Books Store Application</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body>
+<!--/* Header fragment */-->
+<nav class="navbar navbar-inverse navbar-fixed-top" th:replace="fragments/header :: header">
+       
+</nav>
+
+<div class="books-content" style="font-size: 1.1em;">
+    <div th:insert="fragments/breadcrumb :: breadcrumb('Login')"></div>
+</div>
+
+
+    <div class="edit-form-header center">
+
+        <div class="access-denied-container">
+            <div class="edit-form-header form">
+
+                <div class="form-group">
+                    <h1 class="error-title">403 - Access Denied</h1>
+            
+                    <div class="error-message">
+                        <p th:text="${errorMessage}">You don't have permission to access this resource.</p>    
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html> 

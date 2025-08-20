@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Books Store Application</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body>
+<!--/* Header fragment */-->
+<nav class="navbar navbar-inverse navbar-fixed-top" th:replace="fragments/header :: header">
+       
+</nav>
+
+<div class="books-content" style="font-size: 1.1em;">
+    <div th:insert="fragments/breadcrumb :: breadcrumb('Place Order')"></div>
+</div>
+
+
+<div class="actions" style="gap: 20px;">
+    <form th:action="@{/v1/web/home}" method="get" style="margin-left: 5px;">
+        <button type="submit">Browse Books</button>
+    </form>
+    <form th:action="@{/v1/web/customers/checkout}" method="get" >
+        <button type="submit">Back to Cart</button>
+    </form>
+</div>
+
+<div class="edit-form-header center" >
+
+    <form th:action="@{/v1/web/customers/order}" method="post" class="edit-form-header form" style="min-width: 300px;">
+        <!-- Display error message if present -->
+        <div th:if="${errorMessage}" class="error-message" style="color: red; margin-bottom: 15px; padding: 10px; border: 1px solid red; background-color: #ffe6e6; border-radius: 4px;">
+            <span th:text="${errorMessage}"></span>
+        </div>
+        
+        <!-- Display success message if present -->
+        <div th:if="${successMessage}" class="success-message" style="color: green; margin-bottom: 15px; padding: 10px; border: 1px solid green; background-color: #e6ffe6; border-radius: 4px;">
+            <span th:text="${successMessage}"></span>
+        </div>
+
+        <div th:if="${successMessage == null or #strings.isEmpty(successMessage)}" style="flex-direction:column">
+            <div class="form-group">
+                <label for="orderTotal">Order Total:</label>
+                <input type="text" id="orderTotal" name="orderTotal" th:value="${orderTotal}" readonly style="width: 100%; background-color: #f0f0f0;" />
+            </div>
+
+            <div class="form-group">
+                <label for="creditCardNumber">Credit Card Number:</label>
+                <input type="text" id="creditCardNumber" name="creditCardNumber" placeholder="1234-5678-9012-3456" required />
+            </div>
+
+            <div class="form-actions" th:if="${errorMessage == null or #strings.isEmpty(errorMessage)}">
+                <button type="submit">Make Payment</button>
+            </div>
+        </div>
+
+        
+    </form>
+</div>
+
+<script>
+ 
+</script>
+
+</body>
+</html>

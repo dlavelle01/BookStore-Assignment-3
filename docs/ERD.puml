@@ -1,0 +1,90 @@
+@startuml
+
+
+skinparam linetype ortho
+
+entity "Role" as e01 {
+  *role_id : number 
+  --
+  *role_name: string
+}
+
+entity "User" as e02 {
+  *user_id : number <<generated>>
+  --
+  *user_name : string
+  *password: string
+  last_modified_by: number
+  *last_modifed_date: date
+  *role_id: number <<FK>>
+}
+
+entity "Customer" as e03 {
+  *customer_id : number <<generated>>
+  --
+  *user_id: number <<FK>>
+  *name : string
+  *surname string
+  *date_of_birth date
+  *address text
+  *phone_number string
+  *email string
+  *last_modifed_date: date
+}
+
+entity "Book" as e04 {
+  *book_id : number <<generated>>
+  --
+  *title : string
+  *author : string
+  *year: date
+  *price: double
+  *last_modifed_date: date
+}
+
+
+entity "Inventory" as e05 {
+  *inventory_id : number <<generated>>
+  --
+  *book_id : number <<FK>>
+  *created_date : date
+  *created_by: number 
+  *copies: number
+  on_hold: boolean
+}
+
+entity "Cart" as e06 {
+  *cart_id : number <<generated>>
+  --
+  *book_id : number <<FK>>
+  *customer_id : number <<generated>>
+  *created_date : date
+  *last_modifed_date: date
+  *copies: number
+  abandoned: boolean
+}
+
+entity "Order" as e07 {
+  *order_id: number <<generated>>
+  --
+  *cart_id: number 
+  *created_date : date
+  processed_date: date
+}
+
+
+e02 }|--|| e01 : 1..many
+
+e02 ||--|| e03: 1..1
+
+e04 }|--|| e05: 1..many
+
+e06 }|..|| e04: 0..many
+
+e03 }o--|| e06: 0..many
+
+e07 ||--|| e06: 1..1
+
+
+
+@enduml

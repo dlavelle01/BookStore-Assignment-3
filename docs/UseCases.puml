@@ -1,0 +1,81 @@
+@startuml
+
+!option handwritten true
+left to right direction
+
+
+skinparam usecase {
+BackgroundColor<< Users >> DarkSeaGreen
+BorderColor<< Users >> DarkSlateGray
+
+BackgroundColor<< Common >> YellowGreen
+BorderColor<< Common >> YellowGreen
+
+ArrowColor Olive
+ActorBorderColor black
+ActorFontName Courier
+
+ActorBackgroundColor<< Human >> Gold
+}
+
+actor Customer as c
+actor Guest as g
+actor Admin as a
+
+
+'package WebApp {
+
+ 
+  rectangle manage {
+    usecase "Add books" as UC_A1
+    usecase "Edit books" as UC_A2
+    usecase "Delete books" as UC_A3
+  }
+
+  rectangle search {
+    usecase "Search Books" as UC_G1 << Common >>
+    usecase "View Details" as UC_G2 << Common >>
+  }
+
+  usecase "Register" as UC1
+  usecase "Login" as UC2 << Users >>
+  usecase "Logout" as UC3 << Users >>
+
+  rectangle cart {
+    usecase "Add to Cart" as UC4
+    usecase "Remove from Cart" as UC5
+    usecase "View Cart" as UC6
+  }
+
+  rectangle order {
+    usecase "Place Order" as UC7
+  }
+'}
+
+UC4 ..> UC7
+
+UC1 .. c : becomes a
+a -up-> UC2
+a -up-> UC3
+
+a -up-> UC_G1
+a -up-> UC_G2
+
+a -right-> UC_A1
+a -right-> UC_A2
+a -right-> UC_A3
+
+g -up-> UC1
+c --> UC2
+c --> UC3
+c --> UC4
+c --> UC5
+c --> UC6
+c --> UC7
+c --> UC_G1
+c --> UC_G2
+
+g -down-> UC_G1
+g -down-> UC_G2
+
+@enduml

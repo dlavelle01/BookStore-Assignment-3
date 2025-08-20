@@ -1,0 +1,218 @@
+body {
+    font-family: sans-serif;
+    overflow-x: hidden;
+  }
+
+div {
+    display: flex;
+}
+
+form {
+    display: flex;
+    justify-content: center;
+}
+
+
+
+.is-invalid {
+    border-color: red;
+}
+
+/** Header @see https://codepen.io/tkraak/pen/pbwJVN */
+
+header {
+    align-items: center;
+    display: flex;
+    margin: 2em;
+}
+
+
+#logo,
+nav {
+
+/*
+    flex is shorthand for
+    flex-grow,
+    flex-shrink,
+    and flex-basis
+
+    this gives us
+    auto equal width flex items
+    and they are all flexbile ... yay!
+*/
+
+flex: 1;
+}
+
+/*
+make the nav ul
+our second flex container
+*/
+
+nav ul {
+display: flex;
+justify-content: space-around;
+}
+
+/*
+as children of ul,
+all list items
+become flex items
+*/
+
+nav li {
+    list-style: none;
+}
+
+nav a {
+    text-decoration: none;
+    color: black;
+}
+
+
+/** Footer */
+.footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.1em;
+    margin-top: 5px;
+}
+
+/* Body */
+.container {
+    display: flex;
+    font-size: 1.5em;
+}
+
+.actions {
+    display: flex;
+    padding-bottom: 20px;
+}
+
+.books-content {
+    display: flex;
+    flex-direction: column;
+    margin: 12px;
+    border-top:2px solid #e3dada;
+    width: 98vw;
+    font-size: 0.8em;
+    padding: 5px;
+    
+}
+
+.breadcrumb {
+    display: inline-block;
+    justify-content: center;
+    border-bottom:2px solid #e3dada;
+    width: 98vw;
+    margin-bottom: 40px;
+    padding-bottom: 5px;
+    padding-top: 5px;   
+}
+
+.search-container {
+    display: flex;
+}
+
+table {
+    color: black;
+    border-collapse: collapse;
+    width: 100vw;
+    font-size: 0.9em;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    
+}
+thead tr td {
+  color: black;
+  font-weight: bold;
+  font-size: 150%;
+  
+}
+
+
+/** Action buttons */
+  button {
+    background-color: #008CBA;
+    border: none;
+    color: white;
+    padding: 10px 16px;
+    cursor: pointer;
+  }
+
+
+/** Forms */
+
+.form-group {
+    margin-bottom: 15px;
+    flex-direction: column;
+}
+
+.form-group label {
+   font-size: 18px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    
+}
+
+.form-group input {
+   
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    height: 28px;
+}
+
+.form-group input.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-actions {
+    gap: 10px;
+    flex-direction: row-reverse;
+}
+
+.edit-book-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    
+    min-width: 40vh;
+  
+    overflow-y: auto;
+    flex-direction: column;
+}
+
+.edit-form-header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.edit-form-header .form {
+    flex-direction: column;
+    gap: 10px;
+    max-height: 60%;
+}
+
+.edit-form-header.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+
+
+
+

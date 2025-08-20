@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Books Store Application</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body>
+<!--/* Header fragment */-->
+<nav class="navbar navbar-inverse navbar-fixed-top" th:replace="fragments/header :: header">
+       
+</nav>
+
+<div class="books-content" style="font-size: 1.1em;">
+    <div th:insert="fragments/breadcrumb :: breadcrumb('Login')"></div>
+</div>
+
+
+<div class="edit-form-header center">
+
+    <form th:action="@{/v1/web/users/login}" method="post" class="edit-form-header form">
+        <!-- Display login error message if present -->
+        <div th:if="${loginError}" class="error-message" style="color: red; margin-bottom: 15px; padding: 10px; border: 1px solid red; background-color: #ffe6e6; border-radius: 4px;">
+            <span th:text="${loginError}"></span>
+        </div>
+        
+        <!-- Display logout success message if present -->
+        <div th:if="${logoutMessage}" class="success-message" style="color: green; margin-bottom: 15px; padding: 10px; border: 1px solid green; background-color: #e6ffe6; border-radius: 4px;">
+            <span th:text="${logoutMessage}"></span>
+        </div>
+        
+        <!-- Display registration success message if present -->
+        <div th:if="${successMessage}" class="success-message" style="color: green; margin-bottom: 15px; padding: 10px; border: 1px solid green; background-color: #e6ffe6; border-radius: 4px;">
+            <span th:text="${successMessage}"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" th:value="${prefilledUsername}" required />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required />
+        </div>
+
+        <button type="submit">Login</button>
+    </form>
+</div>
+
+</body>
+</html>
