@@ -48,3 +48,12 @@ build/
 *.env
 **/application.properties
 **/application.yml
+
+SSL keystores
+*.p12
+src/main/resources/*.p12
+
+
+# SSL keystores
+*.p12
+src/main/resources/*.p12

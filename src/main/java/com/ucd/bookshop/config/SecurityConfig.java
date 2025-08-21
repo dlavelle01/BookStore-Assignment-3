@@ -64,8 +64,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
+                http
+                        .csrf(AbstractHttpConfigurer::disable)
+                        // 🔐 Force HTTPS for every request (HTTP → 302 to HTTPS)
+                        .requiresChannel(ch -> ch.anyRequest().requiresSecure())
+                        // 🛡️ HSTS: tell browsers to stick to HTTPS for your domain
+                        .headers(h -> h.httpStrictTransportSecurity(hsts -> hsts
+                        .includeSubDomains(true)
+                        .preload(false)                // set true only if you intend to preload your domain
+                        .maxAgeInSeconds(31536000)))   // 1 year
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(getOpenedResources()).permitAll()
                         .requestMatchers("/v1/web/users/login", "/v1/web/users/register", "/v1/web/home").permitAll()
