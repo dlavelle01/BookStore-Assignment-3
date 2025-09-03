@@ -19,6 +19,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -65,7 +66,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 http
-                        .csrf(AbstractHttpConfigurer::disable)
+                        // - Added for CSRF
+                        .csrf(csrf -> csrf
+                                .ignoringRequestMatchers("/v1/api/**")
+                                .csrfTokenRepository(new HttpSessionCsrfTokenRepository())
+                        )
                         // 🔐 Force HTTPS for every request (HTTP → 302 to HTTPS)
                         .requiresChannel(ch -> ch.anyRequest().requiresSecure())
                         // 🛡️ HSTS: tell browsers to stick to HTTPS for your domain
