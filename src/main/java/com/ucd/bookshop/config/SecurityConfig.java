@@ -68,7 +68,7 @@ public class SecurityConfig {
                 http
                         // - Added for CSRF
                         .csrf(csrf -> csrf
-                                .ignoringRequestMatchers("/v1/api/**")
+                                .ignoringRequestMatchers("/v1/api/**", "/v1/web/payments/webhook")
                                 .csrfTokenRepository(new HttpSessionCsrfTokenRepository())
                         )
                         // 🔐 Force HTTPS for every request (HTTP → 302 to HTTPS)
@@ -79,6 +79,7 @@ public class SecurityConfig {
                         .preload(false)                // set true only if you intend to preload your domain
                         .maxAgeInSeconds(31536000)))   // 1 year
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/v1/web/customers/order", "/v1/web/customers/order/success", "/v1/web/customers/order/cancel").hasRole("CUSTOMER")
                         .requestMatchers(getOpenedResources()).permitAll()
                         .requestMatchers("/v1/web/users/login", "/v1/web/users/register", "/v1/web/home").permitAll()
                         .requestMatchers("/v1/web/access-denied").permitAll()
