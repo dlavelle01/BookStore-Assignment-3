@@ -91,67 +91,6 @@ public class SecurityConfig {
             com.ucd.bookshop.authentication.CustomAuthenticationProvider customAuthenticationProvider,
             org.springframework.security.authentication.AuthenticationDetailsSource<
                     jakarta.servlet.http.HttpServletRequest,
-                    org.springframework.security.web.authentication.WebAuthenticationDetails> detailsSource,
-                    TwoFactorFailureHandler twoFactorFailureHandler
-    ) throws Exception {
-                http
-                        // - Added for CSRF
-                        .csrf(csrf -> csrf
-                                .ignoringRequestMatchers("/v1/api/**", "/v1/web/payments/webhook")
-                                .csrfTokenRepository(new HttpSessionCsrfTokenRepository())
-                        )
-                        // 🔐 Force HTTPS for every request (HTTP → 302 to HTTPS)
-                        .requiresChannel(ch -> ch.anyRequest().requiresSecure())
-                        // 🛡️ HSTS: tell browsers to stick to HTTPS for your domain
-                        .headers(h -> h.httpStrictTransportSecurity(hsts -> hsts
-                        .includeSubDomains(true)
-                        .preload(false)                // set true only if you intend to preload your domain
-                        .maxAgeInSeconds(31536000)))   // 1 year
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/v1/web/customers/order", "/v1/web/customers/order/success", "/v1/web/customers/order/cancel").hasRole("CUSTOMER")
-                        .requestMatchers(getOpenedResources()).permitAll()
-                        .requestMatchers("/v1/web/users/login", "/v1/web/users/register", "/v1/web/users/login2","/v1/web/home").permitAll()
-                        .requestMatchers("/v1/web/access-denied").permitAll()
-                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/v1/api/**").hasRole("ADMIN") // API endpoints require ADMIN role
-                        .requestMatchers("/admin/**", "/v1/web/books/**").hasRole("ADMIN")
-                        .requestMatchers("/customer/**", "/v1/web/customers/**").hasRole("CUSTOMER")
-                        .anyRequest().authenticated())
-                        .exceptionHandling(exceptions -> exceptions
-                        .accessDeniedPage("/v1/web/access-denied")
-                        .defaultAuthenticationEntryPointFor(
-                            apiAuthenticationEntryPoint(), 
-                            request -> request.getRequestURI().startsWith("/v1/api/")
-                        ))
-                .httpBasic(basic -> basic
-                        .authenticationEntryPoint(apiAuthenticationEntryPoint()))
-                .authenticationProvider(customAuthenticationProvider)
-                .formLogin(form -> form
-                        .loginPage("/v1/web/users/login")
-                        .loginProcessingUrl("/v1/web/users/login")
-                        .usernameParameter("username")
-                        .passwordParameter("password")
-                        .successHandler(customSuccessHandler)
-                        .failureUrl("/v1/web/users/login?error=true")
-                        .failureHandler(twoFactorFailureHandler)
-                        .authenticationDetailsSource(detailsSource)
-                        .permitAll())
-                .logout(logout -> logout
-                        .logoutUrl("/v1/web/users/logout")
-                        .logoutSuccessUrl("/v1/web/users/login?logout=true")
-                        .permitAll());
-                        
-        return http.build();
-    }
-
-    /*
-    @Bean
-    //public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    public SecurityFilterChain filterChain(
-            HttpSecurity http,
-            com.ucd.bookshop.authentication.CustomAuthenticationProvider customAuthenticationProvider,
-            org.springframework.security.authentication.AuthenticationDetailsSource<
-                    jakarta.servlet.http.HttpServletRequest,
                     org.springframework.security.web.authentication.WebAuthenticationDetails> detailsSource
     ) throws Exception {
         http
@@ -162,11 +101,14 @@ public class SecurityConfig {
                 )
                 // 🔐 Force HTTPS for every request (HTTP → 302 to HTTPS)
                 .requiresChannel(ch -> ch.anyRequest().requiresSecure())
-                // 🛡️ HSTS: tell browsers to stick to HTTPS for your domain
-                .headers(h -> h.httpStrictTransportSecurity(hsts -> hsts
-                        .includeSubDomains(true)
-                        .preload(false)                // set true only if you intend to preload your domain
-                        .maxAgeInSeconds(31536000)))   // 1 year
+                // Security headers (HSTS + CSP)
+                .headers(h -> h
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .preload(false)
+                                .maxAgeInSeconds(31536000)
+                        )
+                )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/v1/web/customers/order", "/v1/web/customers/order/success", "/v1/web/customers/order/cancel").hasRole("CUSTOMER")
                         .requestMatchers(getOpenedResources()).permitAll()
@@ -202,9 +144,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
-     */
-
 
 
     @Bean

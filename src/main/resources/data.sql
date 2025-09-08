@@ -11,12 +11,14 @@ INSERT INTO `role`
 WHERE r.role_id IS NULL;
 
 INSERT INTO `user` (user_id, user_name, `password`, `salt`, role_id, `is_using2fa`, secret)
-SELECT tmp.user_id, tmp.name, tmp.pass, tmp.salt, tmp.role, 0, ''
+SELECT tmp.user_id, tmp.name, tmp.pass, tmp.salt, tmp.role, tmp.using2fa, ''
 FROM (
-     SELECT 'c51d81b9-542a-11f0-8264-0242ac1b0002' as user_id, 'admin' name, SHA2(CONCAT('S190T2', 'admin'), 256) pass, 'S190T2' salt, 1 role
+     SELECT 'c51d81b9-542a-11f0-8264-0242ac1b0002' as user_id, 'admin' name, SHA2(CONCAT('S190T2', 'admin'), 256) pass, 'S190T2' salt, 1 role, 0 using2fa
      UNION
-     SELECT '1fef2db3-542b-11f0-8264-0242ac1b0002', 'jane.doe', SHA2(CONCAT('S290X2', 'jane.doe'), 256), 'S290X2', 2 ) tmp
-     LEFT JOIN `user` u ON u.user_id = tmp.user_id
+     SELECT '1fef2db3-542b-11f0-8264-0242ac1b0002', 'jane.doe', SHA2(CONCAT('S290X2', 'jane.doe'), 256), 'S290X2', 2, 0
+     UNION
+     SELECT '1fef2db3-542b-11f0-8264-0242ac1b0003', 'dave', SHA2(CONCAT('S190X6', 'dave'), 256), 'S190X6', 2, 1 ) tmp
+         LEFT JOIN `user` u ON u.user_id = tmp.user_id
 WHERE u.user_id IS NULL;
 
 
@@ -43,6 +45,7 @@ INSERT INTO customer(user_id, name, surname, date_of_birth, address, email, phon
     LEFT JOIN customer c on c.user_id = tmp.user_id
     WHERE c.user_id IS NULL;
 
+
 INSERT INTO inventory(book_id, copies, on_hold_for_customer_id)
     SELECT tmp.book_id, tmp.copies, tmp.on_hold_for_customer_id
     FROM (
@@ -54,3 +57,5 @@ INSERT INTO inventory(book_id, copies, on_hold_for_customer_id)
          )  as tmp
              LEFT JOIN inventory i on i.book_id = tmp.book_id and i.copies = tmp.copies -- and COALESCE(i.on_hold_for_customer_id, 0) = and COALESCE(tmp.on_hold_for_customer_id, 0)
     WHERE i.inventory_id IS NULL;
+
+

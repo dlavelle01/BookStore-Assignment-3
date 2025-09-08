@@ -1,0 +1,40 @@
+git add .
+git commit -m "chore: initial import of BookShop Spring Boot project"
+git remote add origin https://github.com/dlavelle01/BookStore-Assignment-3
+git push -u origin main
+
+
+echo "# BookStore-Assignment-3" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/dlavelle01/BookStore-Assignment-3.git
+git push -u origin main
+
+
+echo "# BookStore-Assignment-3" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin git@github.com:dlavelle01/BookStore-Assignment-3.git
+git push -u origin main
+
+
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+
+
+id_ed25519
+
+Which is larger, 2 or 9?
+
+
+------------
+
+- sockets
+- internet
+
+
+git commit -m "CSRF updates"
+

@@ -9,15 +9,14 @@ import com.ucd.bookshop.exception.UserNotFoundException;
 import com.ucd.bookshop.model.ShoppingCartWithInventory;
 import com.ucd.bookshop.repository.ShoppingCartRepository;
 import com.ucd.bookshop.service.CustomerCartService;
-//import com.ucd.bookshop.repository.UserRepository;       // NEW
+
 import com.ucd.bookshop.repository.CustomerRepository;   // NEW
-import jakarta.annotation.security.RolesAllowed;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import java.security.Principal;
@@ -32,8 +31,6 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 
-import java.util.HashMap;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/v1/web/customers")
@@ -95,6 +92,7 @@ public class CustomerController {
         return "customers/checkout";
     }
 
+    /*
     @GetMapping("/removeItemFromCart")
     public String removeItemFromCart(Model model, @RequestParam Long bookId) throws UserNotFoundException, BookNotFoundException {
         Integer customerId = getCurrentCustomerId(); 
@@ -103,6 +101,20 @@ public class CustomerController {
         model.addAttribute("cartItems", cartItems);
 
         return "customers/checkout";
+    }
+
+     */
+
+    @GetMapping("/cart/item/{pid}/remove")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public String removeCartItemByPublicId(@PathVariable("pid") String publicId, Principal principal) {
+        Integer customerId = requireCurrentCustomerId(principal);
+        var item = shoppingCartRepository
+                .findByPublicIdAndCustomer_Id(publicId, customerId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND));
+        shoppingCartRepository.delete(item);
+        return "redirect:/v1/web/customers/checkout";
     }
 
     @GetMapping("/order")

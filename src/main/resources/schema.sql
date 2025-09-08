@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `user`
     user_name             VARCHAR(256) NOT NULL,
     `password`            VARCHAR(1024) NOT NULL,
     `salt`                VARCHAR(32) NOT NULL,
-    `2FA`                 TINYINT(1) NOT NULL,
+    `is_using2fa`         TINYINT(1) NOT NULL,
     `secret`              VARCHAR(64) NOT NULL,
     role_id               INT NOT NULL,
     last_modified_by      INT,
@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS shopping_cart
 (
 	shopping_cart_id	BIGINT AUTO_INCREMENT PRIMARY KEY,
 	book_id			    BIGINT NOT NULL,
+    public_id           VARCHAR(36) NOT NULL,
 	customer_id			INT NOT NULL,
     created_date 	    TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
     abandoned			TINYINT(1) DEFAULT 0,

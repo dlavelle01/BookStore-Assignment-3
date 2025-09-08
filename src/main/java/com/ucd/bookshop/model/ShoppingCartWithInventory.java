@@ -7,19 +7,16 @@ public class ShoppingCartWithInventory extends ShoppingCart {
 
     private Long copies;
 
-    public ShoppingCartWithInventory(Long id, Book book, Customer customer,
-            Boolean abandoned, Long copies) {
-        super(book, customer, abandoned);
-
-        this.setId(id);
+    public ShoppingCartWithInventory(ShoppingCart shoppingCart, Long copies) {
+        super(shoppingCart.getBook(), shoppingCart.getCustomer(), shoppingCart.getAbandoned());
+        this.setId(shoppingCart.getId());
+        this.setPublicId(shoppingCart.getPublicId()); // <-- critical
+        this.setCreatedDate(shoppingCart.getCreatedDate());
         this.copies = copies;
     }
 
-    public ShoppingCartWithInventory(ShoppingCart shoppingCart, Long copies) {
-        super(shoppingCart.getBook(), shoppingCart.getCustomer(), shoppingCart.getAbandoned());
-
-        this.setId(shoppingCart.getId());
-        this.copies = copies;
+    public ShoppingCartWithInventory(ShoppingCart shoppingCart, Integer copies) {
+        this(shoppingCart, copies == null ? null : copies.longValue());
     }
 
     public Long getCopies() {
@@ -40,9 +37,20 @@ public class ShoppingCartWithInventory extends ShoppingCart {
     /**
      * Convert back
      */
+    /*
     public ShoppingCart toShoppingCart() {
         ShoppingCart cart = new ShoppingCart(getBook(), getCustomer(), getAbandoned());
         cart.setId(getId());
+        cart.setCreatedDate(getCreatedDate());
+        return cart;
+    }
+
+     */
+
+    public ShoppingCart toShoppingCart() {
+        ShoppingCart cart = new ShoppingCart(getBook(), getCustomer(), getAbandoned());
+        cart.setId(getId());
+        cart.setPublicId(getPublicId()); // <-- add this
         cart.setCreatedDate(getCreatedDate());
         return cart;
     }

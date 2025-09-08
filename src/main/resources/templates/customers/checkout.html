@@ -59,14 +59,15 @@
                                 </span>
                             </td>
                             <td>
-                                <button type="button" class="btn btn-sm btn-danger" 
-                                        th:onclick="'removeFromCart(' + ${item.book.id} + ')'">
+                                <!-- Use opaque publicId instead of bookId -->
+                                <a th:href="@{|/v1/web/customers/cart/item/${item.publicId}/remove|}"
+                                   class="btn btn-sm btn-danger" role="button">
                                     Remove
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     </tbody>
-                </table>
+                </table>Í
                 
                 
             

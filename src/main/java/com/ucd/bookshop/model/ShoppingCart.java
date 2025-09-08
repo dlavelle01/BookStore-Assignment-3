@@ -3,6 +3,7 @@ package com.ucd.bookshop.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
+import java.util.UUID;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +15,9 @@ public class ShoppingCart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "shopping_cart_id")
     private Long id;
+
+    @Column(name = "public_id", nullable = false, unique = true, length = 36, updatable = false)
+    private String publicId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
@@ -42,6 +46,13 @@ public class ShoppingCart {
         this.abandoned = abandoned != null ? abandoned : false;
     }
 
+    @PrePersist
+    void ensurePublicId() {
+        if (publicId == null || publicId.isBlank()) {
+            publicId = UUID.randomUUID().toString();
+        }
+    }
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -50,6 +61,9 @@ public class ShoppingCart {
     public void setId(Long id) {
         this.id = id;
     }
+
+    public String getPublicId() { return publicId; }
+    public void setPublicId(String publicId) { this.publicId = publicId; }
 
     public Book getBook() {
         return book;
@@ -87,6 +101,7 @@ public class ShoppingCart {
     public String toString() {
         return "ShoppingCart{" +
                 "id=" + id +
+                ", publicId=" + publicId +
                 ", bookId=" + (book != null ? book.getId() : null) +
                 ", customerId=" + (customer != null ? customer.getId() : null) +
                 ", createdDate=" + createdDate +

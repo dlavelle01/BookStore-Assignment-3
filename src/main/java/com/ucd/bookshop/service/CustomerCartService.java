@@ -44,8 +44,8 @@ public class CustomerCartService {
         // Verify book exists
         Book book = bookInventoryService.getBookById(bookId);
 
-        Optional<ShoppingCart> shoppingCart = shoppingCartRepository
-                .findByCustomerIdAndBookIdAndAbandonedFalse(customerId, bookId);
+       Optional<ShoppingCart> shoppingCart = shoppingCartRepository
+               .findByCustomer_IdAndBook_IdAndAbandonedFalse(customerId, bookId);
 
         // Add the item if not present
         if (!shoppingCart.isPresent()) {
@@ -90,7 +90,7 @@ public class CustomerCartService {
         List<ShoppingCartWithInventory> cartItems = shoppingCartRepository
                 .findShoppingCartWithInventoryByCustomerId(customerId);
 
-        shoppingCartRepository.deleteByCustomerId(customerId);
+        shoppingCartRepository.deleteByCustomer_Id(customerId);
 
         return cartItems;
     }
