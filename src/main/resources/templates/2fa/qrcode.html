@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>QR Code</title></head>
+<body>
+<div id="qr" th:if="${qr}">
+    <p>Scan this Barcode using Google Authenticator app on your phone to use it later in login</p>
+    <img th:if="${qr}" th:src="${qr}" alt="2FA QR Code"/>
+
+</div>
+<a th:href="@{/login}" class="btn btn-primary">Go to login page</a>
+</body>
+</html>

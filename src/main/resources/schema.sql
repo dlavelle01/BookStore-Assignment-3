@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS `user`
     user_name             VARCHAR(256) NOT NULL,
     `password`            VARCHAR(1024) NOT NULL,
     `salt`                VARCHAR(32) NOT NULL,
+    `2FA`                 TINYINT(1) NOT NULL,
+    `secret`              VARCHAR(64) NOT NULL,
     role_id               INT NOT NULL,
     last_modified_by      INT,
     last_modified_date    TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),

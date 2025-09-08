@@ -1,5 +1,9 @@
 package com.ucd.bookshop.controllers.web;
 
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+import java.util.Map;
+
 import com.ucd.bookshop.constants.Role;
 import com.ucd.bookshop.controllers.dto.LoginDto;
 import com.ucd.bookshop.controllers.dto.UserDto;
@@ -21,6 +25,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,6 +134,17 @@ public class UserController {
 
         // If authentication successful, redirect to dashboard or home
         return "redirect:/v1/web/customers/cart";
+    }
+
+    @PostMapping("/user/update/2fa")
+    @ResponseBody
+    public Map<String, String> modifyUser2FA(@RequestParam("use2FA") boolean use2FA)
+            throws UnsupportedEncodingException {
+        UserDto user = userService.updateUser2FA(use2FA);
+        if (use2FA) {
+            return Map.of("message", userService.generateQRUrl(user));
+        }
+        return Map.of("message", "2FA disabled");
     }
     
    

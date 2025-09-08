@@ -4,10 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,9 +20,11 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.BadCredentialsException;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+
+
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +32,8 @@ import com.ucd.bookshop.constants.Role;
 import com.ucd.bookshop.model.User;
 import com.ucd.bookshop.repository.UserRepository;
 import com.ucd.bookshop.service.UserService;
+import com.ucd.bookshop.authentication.CustomAuthenticationProvider;
+import com.ucd.bookshop.authentication.CustomWebAuthenticationDetailsSource;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -50,21 +54,31 @@ public class SecurityConfig {
     private final CustomAuthenticationSuccessHandler customSuccessHandler;
     private final UserRepository userRepository;
     private final UserService userService;
-    private final UserDetailsService userDetailsService;
+    //private final UserDetailsService userDetailsService;
+    //private final CustomAuthenticationProvider customAuthenticationProvider;
 
     @Autowired
     public SecurityConfig(CustomAuthenticationSuccessHandler customSuccessHandler,
-            UserRepository userRepository,
-            UserService userService,
-            UserDetailsService userDetailsService) {
+                          UserRepository userRepository,
+                          UserService userService/*,
+                          UserDetailsService userDetailsService,
+                          CustomAuthenticationProvider customAuthenticationProvider*/) {
+        //this.customAuthenticationProvider = customAuthenticationProvider;
         this.customSuccessHandler = customSuccessHandler;
         this.userRepository = userRepository;
         this.userService = userService;
-        this.userDetailsService = userDetailsService;
+        //this.userDetailsService = userDetailsService;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    //public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            com.ucd.bookshop.authentication.CustomAuthenticationProvider customAuthenticationProvider,
+            org.springframework.security.authentication.AuthenticationDetailsSource<
+                    jakarta.servlet.http.HttpServletRequest,
+                    org.springframework.security.web.authentication.WebAuthenticationDetails> detailsSource
+    ) throws Exception {
                 http
                         // - Added for CSRF
                         .csrf(csrf -> csrf
@@ -88,8 +102,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**", "/v1/web/books/**").hasRole("ADMIN")
                         .requestMatchers("/customer/**", "/v1/web/customers/**").hasRole("CUSTOMER")
                         .anyRequest().authenticated())
-                .authenticationProvider(customAuthenticationProvider())
-                .exceptionHandling(exceptions -> exceptions
+                        .exceptionHandling(exceptions -> exceptions
                         .accessDeniedPage("/v1/web/access-denied")
                         .defaultAuthenticationEntryPointFor(
                             apiAuthenticationEntryPoint(), 
@@ -97,6 +110,7 @@ public class SecurityConfig {
                         ))
                 .httpBasic(basic -> basic
                         .authenticationEntryPoint(apiAuthenticationEntryPoint()))
+                .authenticationProvider(customAuthenticationProvider)
                 .formLogin(form -> form
                         .loginPage("/v1/web/users/login")
                         .loginProcessingUrl("/v1/web/users/login")
@@ -104,6 +118,7 @@ public class SecurityConfig {
                         .passwordParameter("password")
                         .successHandler(customSuccessHandler)
                         .failureUrl("/v1/web/users/login?error=true")
+                        .authenticationDetailsSource(detailsSource)
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/v1/web/users/logout")
@@ -113,10 +128,15 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /*
     @Bean
-    public AuthenticationProvider customAuthenticationProvider() {
-        return new CustomAuthenticationProvider(userDetailsService, userService);
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .authenticationProvider(customAuthenticationProvider)
+                .build();
     }
+
+     */
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -136,10 +156,13 @@ public class SecurityConfig {
         };
     }
 
+    /*
     @Bean
     public UserDetailsService userDetailsService() {
         return new CustomUserDetailsService(userRepository);
     }
+
+     */
 
     @Bean
     public AuthenticationEntryPoint apiAuthenticationEntryPoint() {
@@ -161,6 +184,7 @@ public class SecurityConfig {
         };
     }
 
+    /*
     @Service
     public static class CustomUserDetailsService implements UserDetailsService {
 
@@ -194,6 +218,7 @@ public class SecurityConfig {
             return new CustomUserDetails(user, authorities, customerId);
         }
     }
+    */
 
     public static class CustomUserDetails implements UserDetails {
         private final User user;
@@ -254,6 +279,7 @@ public class SecurityConfig {
         }
     }
 
+    /*
     public static class CustomAuthenticationProvider implements AuthenticationProvider {
 
         private final UserDetailsService userDetailsService;
@@ -309,6 +335,8 @@ public class SecurityConfig {
             return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
         }
     }
+
+     */
 
     @Component
     public static class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
