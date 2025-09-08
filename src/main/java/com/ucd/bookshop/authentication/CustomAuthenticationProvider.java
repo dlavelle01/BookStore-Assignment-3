@@ -7,13 +7,14 @@ import com.ucd.bookshop.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
-
+import org.jboss.aerogear.security.otp.Totp;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import org.springframework.security.authentication.AuthenticationProvider;
+import com.ucd.bookshop.authentication.TwoFactorAuthRequiredException;
 
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
@@ -31,51 +32,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         this.userService = userService;
     }
 
-    /*
-    @Autowired
-    private UserRepository userRepository;
-
-     */
-
-    /*
-    @Override
-    public Authentication authenticate(Authentication auth)
-            throws AuthenticationException {
-        String verificationCode
-                = ((CustomWebAuthenticationDetails) auth.getDetails())
-                .getVerificationCode();
-
-
-        User user = userRepository.findByUserName(auth.getName());
-        if ((user == null)) {
-            throw new BadCredentialsException("Invalid username or password");
-        }
-        if (user.getIsUsing2FA()) {
-
-            Totp totp = new Totp(user.getSecret());
-            if (!isValidLong(verificationCode) || !totp.verify(verificationCode)) {
-                throw new BadCredentialsException("Invalid Verification Code");
-            }
-        }
-
-        Authentication result = super.authenticate(auth);
-
-        System.out.println("Credentials "+result.getAuthorities().toString());
-
-        return new UsernamePasswordAuthenticationToken(
-                user, result.getCredentials(), result.getAuthorities());
-    }
-
-    private boolean isValidLong(String code) {
-        try {
-            Long.parseLong(code);
-        } catch (NumberFormatException e) {
-            return false;
-        }
-        return true;
-    }
-
-     */
     @Override
     public Authentication authenticate(Authentication authentication)
             throws org.springframework.security.core.AuthenticationException {
@@ -98,7 +54,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         } catch (Exception e) {
             throw new BadCredentialsException("Authentication failed");
         }
-
+/*
         // 3) If 2FA is enabled, at least require a code to be present
         //    (We can wire real TOTP verification later—keeping this compile-only.)
         if (Boolean.TRUE.equals(user.getIsUsing2FA())){
@@ -113,13 +69,38 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             // TODO: verify TOTP code against user.getSecret() if you want full 2FA enforcement now
         }
 
+ */
+        // 3) 2FA handling — trigger two-page flow or verify inline if code present
+        boolean twoFaEnabled = Boolean.TRUE.equals(user.getIsUsing2FA()); // or user.isUsing2FA()
+        String code = null;
+        Object details = authentication.getDetails();
+        if (details instanceof CustomWebAuthenticationDetails d) {
+            code = d.getVerificationCode();
+        }
+        if (twoFaEnabled) {
+            if (code == null || code.isBlank()) {
+                // CRITICAL: use custom exception so failureHandler redirects to /login2
+                throw new TwoFactorAuthRequiredException("2FA code required");
+            }
+            if (user.getSecret() == null || user.getSecret().isBlank()) {
+                throw new BadCredentialsException("2FA not set up for this account");
+            }
+            Totp totp = new Totp(user.getSecret());
+            if (!totp.verify(code.trim())) {
+                throw new BadCredentialsException("Invalid 2FA code");
+            }
+        }
+
+
+
+
         // 4) Load authorities via UserDetailsService you already have configured
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
         // 5) Return successful auth token
         return new UsernamePasswordAuthenticationToken(
                 userDetails,
-                rawPassword,
+                null,
                 userDetails.getAuthorities()
         );
     }
@@ -128,7 +109,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return authentication.equals(UsernamePasswordAuthenticationToken.class);
+        //return authentication.equals(UsernamePasswordAuthenticationToken.class);
+        return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
     }
 
 }

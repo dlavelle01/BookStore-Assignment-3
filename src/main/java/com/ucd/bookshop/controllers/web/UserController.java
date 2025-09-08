@@ -27,6 +27,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import org.jboss.aerogear.security.otp.Totp;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import com.ucd.bookshop.repository.UserRepository;
+import com.ucd.bookshop.model.User;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,17 +44,21 @@ import org.slf4j.LoggerFactory;
 public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
-
     private static final String LOGIN_REDIRECT = "users/login";
-
     private final UserService userService;
-
     private final UserRegistrationService userRegistrationService;
+    private final UserRepository userRepository;
+    private final UserDetailsService userDetailsService;
 
     @Autowired
-    public UserController(UserService userService, UserRegistrationService userRegistrationService) {
+    public UserController(UserService userService,
+                          UserRegistrationService userRegistrationService,
+                          UserRepository userRepository,
+                          UserDetailsService userDetailsService) {
         this.userService = userService;
         this.userRegistrationService = userRegistrationService;
+        this.userRepository = userRepository;
+        this.userDetailsService = userDetailsService;
     }
 
     @GetMapping("/register")
@@ -146,6 +159,62 @@ public class UserController {
         }
         return Map.of("message", "2FA disabled");
     }
+
+    @GetMapping("/login2")
+    public String showLogin2(Model model,
+                             HttpSession session,
+                             @RequestParam(value = "error", required = false) String error) {
+        String username = (String) session.getAttribute("MFA_USERNAME");
+        if (username == null || username.isBlank()) {
+            // No staged username → send them back to normal login
+            return "redirect:/v1/web/users/login";
+        }
+        model.addAttribute("username", username);
+        model.addAttribute("error", error != null);
+        return "users/login2"; // resolves templates/users/login2.html
+    }
+
+    @PostMapping("/login2")
+    public String processLogin2(@RequestParam("code") String code,
+                                HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) return "redirect:/v1/web/users/login";
+
+        String username = (String) session.getAttribute("MFA_USERNAME");
+        if (username == null || username.isBlank()) return "redirect:/v1/web/users/login";
+
+        // Load user + verify TOTP
+        User user = userRepository.findByUserName(username);
+        if (user == null || user.getSecret() == null || user.getSecret().isBlank()) {
+            return "redirect:/v1/web/users/login";
+        }
+
+        Totp totp = new Totp(user.getSecret());
+        if (!totp.verify(code == null ? "" : code.trim())) {
+            return "redirect:/v1/web/users/login2?error=true";
+        }
+
+        // Build authenticated session
+        var userDetails = userDetailsService.loadUserByUsername(username);
+        var auth = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        // Cleanup MFA session flags
+        session.removeAttribute("MFA_USERNAME");
+        session.removeAttribute("MFA_TS");
+
+        // Redirect similar to your CustomAuthenticationSuccessHandler
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isCustomer = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_CUSTOMER"));
+
+        if (isAdmin)    return "redirect:/v1/web/books/";
+        if (isCustomer) return "redirect:/v1/web/customers/checkout";
+        return "redirect:/v1/web/home";
+    }
+
     
    
 }
