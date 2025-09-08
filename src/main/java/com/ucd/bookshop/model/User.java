@@ -24,6 +24,12 @@ public class User {
     private String password;
 
     @Column(nullable = false)
+    private Boolean isUsing2FA;
+
+    @Column(nullable = false)
+    private String secret;
+
+    @Column(nullable = false)
     private String salt;
 
     @Column(name = "role_id", nullable = false)
@@ -70,6 +76,14 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public Boolean getIsUsing2FA() { return isUsing2FA; }
+
+    public void setIsUsing2FA(Boolean twoFa) { this.isUsing2FA = twoFa; }
+
+    public String getSecret() { return secret; }
+
+    public void setSecret(String secret) { this.secret = secret; }
 
     public String getSalt() {
         return salt;

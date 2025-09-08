@@ -30,6 +30,7 @@ public class UserRegistrationService {
 
             CustomerService.CreateCustomerRequest customerRequest = new CustomerService.CreateCustomerRequest(
                     createdUser.getUserId(),
+                    //createdUser.getIsUsing2FA(),
                     request.getName(),
                     request.getSurname(),
                     request.getEmail(),

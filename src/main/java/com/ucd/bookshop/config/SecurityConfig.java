@@ -7,35 +7,29 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
-import com.ucd.bookshop.constants.Role;
+import org.springframework.stereotype.Component;
+
 import com.ucd.bookshop.model.User;
 import com.ucd.bookshop.repository.UserRepository;
 import com.ucd.bookshop.service.UserService;
+import com.ucd.bookshop.security.TwoFactorFailureHandler;
+import com.ucd.bookshop.authentication.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,21 +44,56 @@ public class SecurityConfig {
     private final CustomAuthenticationSuccessHandler customSuccessHandler;
     private final UserRepository userRepository;
     private final UserService userService;
-    private final UserDetailsService userDetailsService;
+    //private final UserDetailsService userDetailsService;
+    //private final CustomAuthenticationProvider customAuthenticationProvider;
 
     @Autowired
     public SecurityConfig(CustomAuthenticationSuccessHandler customSuccessHandler,
-            UserRepository userRepository,
-            UserService userService,
-            UserDetailsService userDetailsService) {
+                          UserRepository userRepository,
+                          UserService userService/*,
+                          UserDetailsService userDetailsService,
+                          CustomAuthenticationProvider customAuthenticationProvider*/) {
+        //this.customAuthenticationProvider = customAuthenticationProvider;
         this.customSuccessHandler = customSuccessHandler;
         this.userRepository = userRepository;
         this.userService = userService;
-        this.userDetailsService = userDetailsService;
+        //this.userDetailsService = userDetailsService;
     }
 
+    /*
+   // Bean that captures extra login fields (e.g., verificationCode) on the first page
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public org.springframework.security.authentication.AuthenticationDetailsSource<jakarta.servlet.http.HttpServletRequest, org.springframework.security.web.authentication.WebAuthenticationDetails> authenticationDetailsSource() {
+    return new CustomWebAuthenticationDetailsSource();
+    }
+
+     */
+
+    /*
+    @Bean
+    AuthenticationDetailsSource<HttpServletRequest, CustomWebAuthenticationDetails>
+    authenticationDetailsSource() {
+        return CustomWebAuthenticationDetails::new;
+    }
+
+     */
+
+    @Bean
+    TwoFactorFailureHandler twoFactorFailureHandler() {
+        return new TwoFactorFailureHandler();
+    }
+
+
+    @Bean
+    //public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            com.ucd.bookshop.authentication.CustomAuthenticationProvider customAuthenticationProvider,
+            org.springframework.security.authentication.AuthenticationDetailsSource<
+                    jakarta.servlet.http.HttpServletRequest,
+                    org.springframework.security.web.authentication.WebAuthenticationDetails> detailsSource,
+                    TwoFactorFailureHandler twoFactorFailureHandler
+    ) throws Exception {
                 http
                         // - Added for CSRF
                         .csrf(csrf -> csrf
@@ -81,15 +110,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/v1/web/customers/order", "/v1/web/customers/order/success", "/v1/web/customers/order/cancel").hasRole("CUSTOMER")
                         .requestMatchers(getOpenedResources()).permitAll()
-                        .requestMatchers("/v1/web/users/login", "/v1/web/users/register", "/v1/web/home").permitAll()
+                        .requestMatchers("/v1/web/users/login", "/v1/web/users/register", "/v1/web/users/login2","/v1/web/home").permitAll()
                         .requestMatchers("/v1/web/access-denied").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/v1/api/**").hasRole("ADMIN") // API endpoints require ADMIN role
                         .requestMatchers("/admin/**", "/v1/web/books/**").hasRole("ADMIN")
                         .requestMatchers("/customer/**", "/v1/web/customers/**").hasRole("CUSTOMER")
                         .anyRequest().authenticated())
-                .authenticationProvider(customAuthenticationProvider())
-                .exceptionHandling(exceptions -> exceptions
+                        .exceptionHandling(exceptions -> exceptions
                         .accessDeniedPage("/v1/web/access-denied")
                         .defaultAuthenticationEntryPointFor(
                             apiAuthenticationEntryPoint(), 
@@ -97,6 +125,7 @@ public class SecurityConfig {
                         ))
                 .httpBasic(basic -> basic
                         .authenticationEntryPoint(apiAuthenticationEntryPoint()))
+                .authenticationProvider(customAuthenticationProvider)
                 .formLogin(form -> form
                         .loginPage("/v1/web/users/login")
                         .loginProcessingUrl("/v1/web/users/login")
@@ -104,6 +133,8 @@ public class SecurityConfig {
                         .passwordParameter("password")
                         .successHandler(customSuccessHandler)
                         .failureUrl("/v1/web/users/login?error=true")
+                        .failureHandler(twoFactorFailureHandler)
+                        .authenticationDetailsSource(detailsSource)
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/v1/web/users/logout")
@@ -113,10 +144,68 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /*
     @Bean
-    public AuthenticationProvider customAuthenticationProvider() {
-        return new CustomAuthenticationProvider(userDetailsService, userService);
+    //public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            com.ucd.bookshop.authentication.CustomAuthenticationProvider customAuthenticationProvider,
+            org.springframework.security.authentication.AuthenticationDetailsSource<
+                    jakarta.servlet.http.HttpServletRequest,
+                    org.springframework.security.web.authentication.WebAuthenticationDetails> detailsSource
+    ) throws Exception {
+        http
+                // - Added for CSRF
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/v1/api/**", "/v1/web/payments/webhook")
+                        .csrfTokenRepository(new HttpSessionCsrfTokenRepository())
+                )
+                // 🔐 Force HTTPS for every request (HTTP → 302 to HTTPS)
+                .requiresChannel(ch -> ch.anyRequest().requiresSecure())
+                // 🛡️ HSTS: tell browsers to stick to HTTPS for your domain
+                .headers(h -> h.httpStrictTransportSecurity(hsts -> hsts
+                        .includeSubDomains(true)
+                        .preload(false)                // set true only if you intend to preload your domain
+                        .maxAgeInSeconds(31536000)))   // 1 year
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/v1/web/customers/order", "/v1/web/customers/order/success", "/v1/web/customers/order/cancel").hasRole("CUSTOMER")
+                        .requestMatchers(getOpenedResources()).permitAll()
+                        .requestMatchers("/v1/web/users/login", "/v1/web/users/register", "/v1/web/home").permitAll()
+                        .requestMatchers("/v1/web/access-denied").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/v1/api/**").hasRole("ADMIN") // API endpoints require ADMIN role
+                        .requestMatchers("/admin/**", "/v1/web/books/**").hasRole("ADMIN")
+                        .requestMatchers("/customer/**", "/v1/web/customers/**").hasRole("CUSTOMER")
+                        .anyRequest().authenticated())
+                .exceptionHandling(exceptions -> exceptions
+                        .accessDeniedPage("/v1/web/access-denied")
+                        .defaultAuthenticationEntryPointFor(
+                                apiAuthenticationEntryPoint(),
+                                request -> request.getRequestURI().startsWith("/v1/api/")
+                        ))
+                .httpBasic(basic -> basic
+                        .authenticationEntryPoint(apiAuthenticationEntryPoint()))
+                .authenticationProvider(customAuthenticationProvider)
+                .formLogin(form -> form
+                        .loginPage("/v1/web/users/login")
+                        .loginProcessingUrl("/v1/web/users/login")
+                        .usernameParameter("username")
+                        .passwordParameter("password")
+                        .successHandler(customSuccessHandler)
+                        .failureUrl("/v1/web/users/login?error=true")
+                        .authenticationDetailsSource(detailsSource)
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/v1/web/users/logout")
+                        .logoutSuccessUrl("/v1/web/users/login?logout=true")
+                        .permitAll());
+
+        return http.build();
     }
+
+     */
+
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -136,10 +225,6 @@ public class SecurityConfig {
         };
     }
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return new CustomUserDetailsService(userRepository);
-    }
 
     @Bean
     public AuthenticationEntryPoint apiAuthenticationEntryPoint() {
@@ -159,40 +244,6 @@ public class SecurityConfig {
                 "/v3/api-docs/**",
                 "/webjars/**"
         };
-    }
-
-    @Service
-    public static class CustomUserDetailsService implements UserDetailsService {
-
-        private final UserRepository userRepository;
-
-        public CustomUserDetailsService(UserRepository userRepository) {
-            this.userRepository = userRepository;
-        }
-
-        @Override
-        public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-            logger.info("Loading user by username: {}", username);
-
-            User user = userRepository.findByUserName(username);
-            if (user == null) {
-                logger.info("User not found: {}", username);
-                throw new UsernameNotFoundException("User not found: " + username);
-            }
-
-            logger.info("User found: {}, roleId: {}", user.getUserName(), user.getRoleId());
-
-            String roleName = "ROLE_" + Role.fromId(user.getRoleId()).getName();
-            List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(roleName));
-
-            // Get customer ID if user is a customer
-            Integer customerId = null;
-            if (Role.fromId(user.getRoleId()) == Role.CUSTOMER) {
-                customerId = userRepository.findCustomerIdByUserName(user.getUserName());
-            }
-
-            return new CustomUserDetails(user, authorities, customerId);
-        }
     }
 
     public static class CustomUserDetails implements UserDetails {
@@ -251,62 +302,6 @@ public class SecurityConfig {
         @Override
         public boolean isEnabled() {
             return true;
-        }
-    }
-
-    public static class CustomAuthenticationProvider implements AuthenticationProvider {
-
-        private final UserDetailsService userDetailsService;
-        private final UserService userService;
-
-        public CustomAuthenticationProvider(UserDetailsService userDetailsService, UserService userService) {
-            this.userDetailsService = userDetailsService;
-            this.userService = userService;
-        }
-
-        @Override
-        public Authentication authenticate(Authentication authentication)
-                throws org.springframework.security.core.AuthenticationException {
-            String username = authentication.getName();
-            String password = authentication.getCredentials().toString();
-
-            logger.info("Authenticating user: {}", username);
-
-            try {
-                // Load user details
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-                if (userDetails instanceof CustomUserDetails) {
-                    CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
-                    User user = customUserDetails.getUser();
-
-                    // Verify password
-                    boolean passwordValid = userService.verifyPassword(password, user.getSalt(), user.getPassword());
-
-                    if (passwordValid) {
-                        logger.info("Authentication successful for user: {}", username);
-                        return new UsernamePasswordAuthenticationToken(userDetails, password,
-                                userDetails.getAuthorities());
-                    } else {
-                        logger.info("Password verification failed for user: {}", username);
-                        throw new BadCredentialsException("Invalid username or password");
-                    }
-                } else {
-                    // Has to be instance of CustomUserDetails
-                    throw new BadCredentialsException("Authentication failed, Unknown user");
-                }
-            } catch (UsernameNotFoundException e) {
-                logger.info("User not found: {}", username);
-                throw new BadCredentialsException("Invalid username or password");
-            } catch (Exception e) {
-                logger.error("Authentication error for user: {}", username, e);
-                throw new BadCredentialsException("Authentication failed");
-            }
-        }
-
-        @Override
-        public boolean supports(Class<?> authentication) {
-            return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
         }
     }
 

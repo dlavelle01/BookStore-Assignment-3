@@ -16,7 +16,7 @@ public class UserRegistrationRequestDto {
     private String userName;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @Size(min = 10, message = "Password must be at least 10 characters")
     private String password;
 
     @NotBlank(message = "Name is required")
@@ -60,6 +60,17 @@ public class UserRegistrationRequestDto {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    /*
+    public String getIsUsing2FA() {
+        return is_using2fa;
+    }
+
+    public void setIsUsing2FA(Boolean is_using2fa) {
+        this.is_using2fa = is_using2fa;
+    }
+
+     */
 
     public String getName() {
         return name;

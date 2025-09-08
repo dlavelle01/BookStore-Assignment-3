@@ -56,8 +56,18 @@ public class UserRegistrationApiController {
                             
             return ResponseEntity.badRequest().body(errorResponse);
         }
+        /*
+        // probably not correct locatoion
+        if (user.isUsing2FA()) {
+            user.setSecret(Base32.random());
+            model.addAttribute("qr", userService.generateQRUrl(user));
+            userService.saveUser(user);
+            return "qrcode";
+        }
 
-        try {
+         */
+
+
             // Convert to service request
             UserRegistrationRequestDto serviceRequest = new UserRegistrationRequestDto();
             serviceRequest.setUserName(request.getUserName());
@@ -79,11 +89,11 @@ public class UserRegistrationApiController {
 
             return ResponseEntity.ok(response);
 
-        } catch (Exception e) {
+        /*} catch (Exception e) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Registration failed");
             errorResponse.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
+        }*/
     }
 }

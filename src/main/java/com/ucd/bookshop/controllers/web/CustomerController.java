@@ -9,6 +9,8 @@ import com.ucd.bookshop.exception.UserNotFoundException;
 import com.ucd.bookshop.model.ShoppingCartWithInventory;
 import com.ucd.bookshop.repository.ShoppingCartRepository;
 import com.ucd.bookshop.service.CustomerCartService;
+//import com.ucd.bookshop.repository.UserRepository;       // NEW
+import com.ucd.bookshop.repository.CustomerRepository;   // NEW
 import jakarta.annotation.security.RolesAllowed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +20,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import java.security.Principal;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,6 +43,8 @@ public class CustomerController {
 
     private final CustomerCartService customerCartService;
     private final ShoppingCartRepository shoppingCartRepository;
+    //private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
 
     @Value("${stripe.publishableKey}")
     private String stripePublishableKey;
@@ -45,12 +52,16 @@ public class CustomerController {
     @Value("${stripe.currency:EUR}")
     private String currency;
 
-    @Autowired
-    public CustomerController(CustomerCartService customerCartService,
-                              ShoppingCartRepository shoppingCartRepository) {
-        this.customerCartService = customerCartService;
-        this.shoppingCartRepository = shoppingCartRepository;
-    }
+   @Autowired
+   public CustomerController(CustomerCartService customerCartService,
+                             ShoppingCartRepository shoppingCartRepository,
+                             //UserRepository userRepository,                 // NEW
+                             CustomerRepository customerRepository) {      // NEW
+               this.customerCartService = customerCartService;
+               this.shoppingCartRepository = shoppingCartRepository;
+               //this.userRepository = userRepository;             // NEW
+               this.customerRepository = customerRepository;     // NEW
+           }
 
     private static long toMinorUnits(BigDecimal amount) {
         return amount.movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
@@ -62,18 +73,11 @@ public class CustomerController {
         return nf.format(amount);
     }
 
-    /*
-    @Autowired
-    public CustomerController(CustomerCartService customerCartService, ShoppingCartRepository shoppingCartRepository) {
-        this.customerCartService = customerCartService;
-        this.shoppingCartRepository = shoppingCartRepository;
-    }
+   @GetMapping("/checkout")
+   public String showCheckout(Model model, Principal principal) throws UserNotFoundException {
+               // Switched to Principal-based resolution (no SecurityContext cast)
+                       Integer customerId = requireCurrentCustomerId(principal); // FIX: semicolon & type
 
-     */
-
-    @GetMapping("/checkout")
-    public String showCheckout(Model model) throws UserNotFoundException {
-        Integer customerId = getCurrentCustomerId(); 
 
         List<ShoppingCartWithInventory> cartItems = shoppingCartRepository.findShoppingCartWithInventoryByCustomerId(customerId);
         model.addAttribute("cartItems", cartItems);
@@ -187,42 +191,8 @@ public class CustomerController {
         model.addAttribute("errorMessage", "Payment cancelled.");
         return "customers/order";
     }
-    /* Retire due to Strip addition
-    @PostMapping("/order")
-    public String processOrder(@RequestParam String orderTotal,
-                              @RequestParam String creditCardNumber, 
-                              Model model) throws UserNotFoundException {
-        Integer customerId = getCurrentCustomerId();
-        
-        try {
-            // Get cart items
-            List<ShoppingCartWithInventory> cartItems = shoppingCartRepository.findShoppingCartWithInventoryByCustomerId(customerId);
-            
-            if (cartItems.isEmpty()) {
-                model.addAttribute("errorMessage", "Your cart is empty.");
-                return "customers/order";
-            }
-            
-            customerCartService.removeCart(customerId);
-            
-            model.addAttribute("successMessage", "Order placed successfully! Total: $" + orderTotal);
-            model.addAttribute("orderConfirmed", true);
-            
-            return "customers/order";
-            
-        } catch (Exception e) {
-            logger.error("Error processing order for customer: {}", customerId, e);
-            model.addAttribute("errorMessage", "Failed to process order. Please try again.");
-            return "customers/order";
-        }
-    }
-    */
 
     /**
-     * Get the current customer ID from the security context
-     * 
-     * @throws UserNotFoundException
-     */
     private Integer getCurrentCustomerId() throws UserNotFoundException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -240,6 +210,47 @@ public class CustomerController {
             logger.error("No authenticated user found");
             throw new UserNotFoundException("No authenticated user found");
         }
+    }
+     */
+    private Integer getCurrentCustomerId() throws UserNotFoundException {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            throw new UserNotFoundException("No authenticated user found");
+        }
+
+        Object principal = auth.getPrincipal();
+
+        // 1) Your custom principal (fast path)
+        if (principal instanceof CustomUserDetails cud && cud.getCustomerId() != null) {
+            return cud.getCustomerId();
+        }
+
+        // 2) Fallback: derive username, then reuse your new helpers
+        String username;
+        if (principal instanceof UserDetails ud) {
+            username = ud.getUsername();
+        } else if (principal instanceof String s) {
+            if ("anonymousUser".equalsIgnoreCase(s)) {
+                throw new UserNotFoundException("No authenticated user found");
+            }
+            username = s;
+        } else {
+            throw new UserNotFoundException("Unsupported principal type: " + principal.getClass().getName());
+        }
+
+        return requireCurrentCustomerId(username);
+    }
+
+    private Integer requireCurrentCustomerId(Principal principal) {
+        if (principal == null) {
+            throw new UserNotFoundException("No authenticated user found");
+        }
+        return requireCurrentCustomerId(principal.getName());
+    }
+
+    private Integer requireCurrentCustomerId(String username) {
+        return customerRepository.findCustomerIdByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("No customer linked to user: " + username));
     }
 
 }
